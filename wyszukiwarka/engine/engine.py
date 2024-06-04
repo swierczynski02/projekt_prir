@@ -20,6 +20,7 @@ async def fetch(session, url):
             return ""
         return await response.text()
 
+
 #Asynchroniczna funkcja do pobierania danych o produkcie
 async def fetch_product_data(product_name):
     urls = [f'https://www.olx.pl/oferty/q-{product_name}/',
@@ -37,40 +38,59 @@ async def fetch_product_data(product_name):
                 # Parsowanie HTML do uzyskania danych o produkcie
                 if "www.olx.pl" in url:
                     try:
-                        div = soup.find('div', {'class': 'css-1sw7q4x'})
-                        link = div.find('a', href=True)
-                        cena = div.find('p', {'data-testid': 'ad-price'}).text
-                        web_name = div.find('h6', {'class': 'css-16v5mdi er34gjf0'}).text
-                        product_info = {
-                            'name': product_name,
-                            'price': cena.strip("qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNMłŁąĄżŻźŹęĘóÓśŚ")+' zł',
-                            'image': div.find('img')['src'],
-                            'source': "OLX",  # Dodaj URL do informacji o produkcie
-                            'link': 'https://www.olx.pl/'+link['href'],
-                            'web_name': web_name
-                        }
-                        logging.debug(f"Parsed product info: {product_info}")
-                        products.append(product_info)
+                        div_all = soup.find_all('div', {'class': 'css-1sw7q4x'})
+                        i = 0
+                        while(i<3):
+                            div = div_all[i]
+                            link = div.find('a', href=True)
+                            cena = div.find('p', {'data-testid': 'ad-price'}).text
+                            web_name = div.find('h6', {'class': 'css-16v5mdi er34gjf0'}).text
+                            szukaj_link = 'https://www.olx.pl/'+link['href']
+                            page = requests.get(szukaj_link)
+                            soup2 = BeautifulSoup(page.content, 'html.parser')
+                            opis_all = soup2.find('div', {'class': 'css-1t507yq er34gjf0'}).text
+                            
+                            product_info = {
+                                'name': product_name,
+                                'price': cena.strip("qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNMłŁąĄżŻźŹęĘóÓśŚ")+' zł',
+                                'image': div.find('img')['src'],
+                                'source': "OLX",  # Dodaj URL do informacji o produkcie
+                                'link': 'https://www.olx.pl/'+link['href'],
+                                'web_name': web_name,
+                                'opis': opis_all
+                            }
+                            logging.debug(f"Parsed product info: {product_info}")
+                            products.append(product_info)
+                            i=i+1
                     except Exception as e:
                         logging.error(f"Error parsing HTML: {e}")
                         continue
                 elif "www.ceneo.pl" in url:
                     try:
                         div_all = soup.find_all('div', {'class': 'cat-prod-row__body'})
-                        div = div_all[1]
-                        cena = div.find('span', {'class': 'price'}).text
-                        link = div.find('a', href=True)
-                        web_name = div.find('strong', {'class': 'cat-prod-row__name'}).text
-                        product_info = {
-                            'name': product_name,
-                            'price': cena.strip("qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNMłŁąĄżŻźŹęĘóÓśŚ")+' zł',
-                            'image': div.find('img')['src'],
-                            'source': "Ceneo",  # Dodaj URL do informacji o produkcie
-                            'link': 'https://www.ceneo.pl/'+link['href'],
-                            'web_name': web_name
-                        }
-                        logging.debug(f"Parsed product info: {product_info}")
-                        products.append(product_info)
+                        i=0
+                        while(i<3):
+                            div = div_all[i]
+                            cena = div.find('span', {'class': 'price'}).text
+                            link = div.find('a', href=True)
+                            szukaj_link = 'https://www.ceneo.pl/'+link['href']+'#tab=spec'
+                            page = requests.get(szukaj_link)
+                            soup2 = BeautifulSoup(page.content, 'html.parser')
+                            opis_all = soup2.find('div', {'class': 'lnd_content'}).text
+                            #opis = opis_all.find('p').text
+                            web_name = div.find('strong', {'class': 'cat-prod-row__name'}).text
+                            product_info = {
+                                'name': product_name,
+                                'price': cena.strip("qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNMłŁąĄżŻźŹęĘóÓśŚ")+' zł',
+                                'image': div.find('img')['src'],
+                                'source': "Ceneo",  # Dodaj URL do informacji o produkcie
+                                'link': 'https://www.ceneo.pl/'+link['href'],
+                                'web_name': web_name,
+                                'opis': opis_all
+                            }
+                            logging.debug(f"Parsed product info: {product_info}")
+                            products.append(product_info)
+                            i=i+1
                     except Exception as e:
                         logging.error(f"Error parsing HTML: {e}")
                         continue

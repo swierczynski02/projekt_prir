@@ -7,12 +7,14 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
+  <div id="container">
     <h1>Product Scraper</h1>
     <form id="searchForm">
         <input type="text" name="product_name" placeholder="Enter product name">
         <button type="submit">Search</button>
     </form>
     <div id="results"></div>
+  </div>
     <script>
         document.getElementById('searchForm').addEventListener('submit', async function(event) {
             event.preventDefault();
@@ -39,6 +41,7 @@
                                 <p>Nazwa: ${product.web_name}</p>
                                 <p>Szukano: ${product.name}</p>
                                 <p>Cena: ${product.price}</p>
+                                <p>Opis: ${product.opis}</p>
                                 <a href="${product.link}" target=”_blank”><button>Sprawdź</button></a>
                             </div>
                         `;
