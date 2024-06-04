@@ -1,0 +1,25 @@
+version: '3'
+services:
+  ui:
+    build: ./ui
+    ports:
+      - "5000:5000"
+  
+  engine:
+    build: ./engine
+    command: ["python", "engine.py"]
+    depends_on:
+      - db_service
+
+  db:
+    image: mongo:4.4
+    ports:
+      - "27017:27017"
+
+  db_service:
+    build: ./db_service
+    ports:
+      - "5002:5002"
+    depends_on:
+      - db
+

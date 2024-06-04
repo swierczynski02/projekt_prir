@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Scraper</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Product Scraper</h1>
+    <form id="searchForm">
+        <input type="text" name="product_name" placeholder="Enter product name">
+        <button type="submit">Search</button>
+    </form>
+    <div id="results"></div>
+    <script>
+        document.getElementById('searchForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const form = event.target;
+            const data = new FormData(form);
+            const response = await fetch('/search', {
+                method: 'POST',
+                body: data
+            });
+            const result = await response.json();
+            if (result.status === 'Search started') {
+                setTimeout(async () => {
+                    const searchResults = await fetch(`/results?product_name=${data.get('product_name')}`);
+                    const searchResultsJson = await searchResults.json();
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = ''; // Wyczyść wyniki przed wyświetleniem nowych
+                    searchResultsJson.forEach(product => {
+                        const productDiv = document.createElement('div');
+                        productDiv.className = 'product';
+                        productDiv.innerHTML = `
+                            <img src="${product.image}" alt="${product.name}">
+                            <div>
+                                <p>Strona: ${product.source}</p>
+                                <p>Nazwa: ${product.web_name}</p>
+                                <p>Szukano: ${product.name}</p>
+                                <p>Cena: ${product.price}</p>
+                                <a href="${product.link}" target=”_blank”><button>Sprawdź</button></a>
+                            </div>
+                        `;
+                        resultsDiv.appendChild(productDiv);
+                    });
+                }, 1000); // Czekaj 1 sekund przed pobraniem wyników z bazy
+            } else {
+                document.getElementById('results').innerText = 'Search failed.';
+            }
+        });
+    </script>
+</body>
+</html>
+
